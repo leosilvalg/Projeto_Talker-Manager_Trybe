@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
-const { randomUUID } = require('crypto');
+const { randomBytes } = require('crypto');
 
 const data = './talker.json';
 
@@ -51,7 +51,7 @@ const loginValidationMiddleware = (req, res, next) => {
 
 app.post('/login', loginValidationMiddleware, async (_request, response) => {
   try {
-    const tokenAleatorio = randomUUID().split('-').join('').substring(0, 16);
+    const tokenAleatorio = randomBytes(8).toString('hex');
     const tokenRandom = {
       token: tokenAleatorio,
     };
