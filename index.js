@@ -22,7 +22,7 @@ app.get('/talker', (_request, response) => {
 });
 
 app.get('/talker/:id', async (request, response) => {
-  const talkerPersons = JSON.parse(fs.readFileSync(data));
+  const talkerPersons = await JSON.parse(fs.readFileSync(data));
   const { id } = request.params;
   const userId = talkerPersons.find((e) => e.id === Number(id));
   if (!userId) {
@@ -49,12 +49,16 @@ const loginValidationMiddleware = (req, res, next) => {
   next();
 };
 
-app.post('/login', loginValidationMiddleware, (_request, response) => {
-  const tokenAleatorio = randomUUID().split('-').join('').substring(0, 16);
-  const tokenRandom = {
-    token: tokenAleatorio,
-  };
-  response.status(HTTP_OK_STATUS).json(tokenRandom);
+app.post('/login', loginValidationMiddleware, async (_request, response) => {
+  try {
+    const tokenAleatorio = randomUUID().split('-').join('').substring(0, 16);
+    const tokenRandom = {
+      token: tokenAleatorio,
+    };
+    response.status(HTTP_OK_STATUS).json(tokenRandom);
+  } catch (err) {
+    return response.status(500).end();
+  }
 });
 
 app.listen(PORT, () => {
