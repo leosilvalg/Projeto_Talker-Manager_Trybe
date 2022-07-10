@@ -2,6 +2,13 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const { randomBytes } = require('crypto');
+const loginValidationMiddleware = require('./middlewares/loginValidate.js');
+const { tokenValidation,
+nameValidation,
+ageValidation,
+talkValidation,
+watchValidate,
+rateValidate } = require('./middlewares/talkerValidate');
 
 const data = './talker.json';
 
@@ -30,25 +37,6 @@ app.get('/talker/:id', async (request, response) => {
   } return response.status(HTTP_OK_STATUS).send(userId);
 });
 
-const loginValidationMiddleware = (req, res, next) => {
-  const { email, password } = req.body;
-  const regex = /\S+@\S+\.\S+/;
-  const emailVerification = regex.test(email);
-  if (!email) {
-    return res.status(400).json({ message: 'O campo "email" é obrigatório' });
-  }
-  if (!emailVerification) {
-    return res.status(400).json({ message: 'O "email" deve ter o formato "email@email.com"' });
-  }
-  if (!password) {
-    return res.status(400).json({ message: 'O campo "password" é obrigatório' });
-  }
-  if (password.length < 6) {
-    return res.status(400).json({ message: 'O "password" deve ter pelo menos 6 caracteres' });
-  }
-  next();
-};
-
 app.post('/login', loginValidationMiddleware, async (_request, response) => {
   try {
     const tokenAleatorio = randomBytes(8).toString('hex');
@@ -59,6 +47,21 @@ app.post('/login', loginValidationMiddleware, async (_request, response) => {
   } catch (err) {
     return response.status(500).end();
   }
+});
+
+app.post('/talker', 
+tokenValidation, 
+nameValidation, 
+ageValidation, 
+talkValidation, 
+watchValidate, 
+rateValidate, async (request, response) => {
+  const talkerPersons = await JSON.parse(fs.readFileSync(data));
+  const { name, age, talk } = request.body;
+  const id = talkerPersons.length + 1;
+  const newPerson = { id, name, age, talk };
+  talkerPersons.push(newPerson);
+  return response.status(201).json(newPerson);
 });
 
 app.listen(PORT, () => {
