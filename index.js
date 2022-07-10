@@ -25,6 +25,7 @@ app.get('/', (_request, response) => {
 
 app.get('/talker', (_request, response) => {
   const talkerPersons = JSON.parse(fs.readFileSync(data));
+  if (!talkerPersons) return response.status(200).json([]);
   response.status(HTTP_OK_STATUS).send(talkerPersons);
 });
 
@@ -56,11 +57,14 @@ ageValidation,
 talkValidation, 
 watchValidate, 
 rateValidate, async (request, response) => {
-  const talkerPersons = await JSON.parse(fs.readFileSync(data));
   const { name, age, talk } = request.body;
-  const id = talkerPersons.length + 1;
-  const newPerson = { id, name, age, talk };
-  talkerPersons.push(newPerson);
+  const { watchedAt, rate } = talk;
+  const dataPath = fs.readFileSync(data, 'utf8');
+  const parsed = JSON.parse(dataPath);
+  const id = parsed.length + 1;
+  const newPerson = { id, name, age, talk: { watchedAt, rate } };
+  parsed.push(newPerson);
+  fs.writeFileSync(data, JSON.stringify(parsed));
   return response.status(201).json(newPerson);
 });
 
