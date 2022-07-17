@@ -18,11 +18,6 @@ app.use(bodyParser.json());
 const HTTP_OK_STATUS = 200;
 const PORT = '3000';
 
-// não remova esse endpoint, e para o avaliador funcionar
-app.get('/', (_request, response) => {
-  response.status(HTTP_OK_STATUS).send();
-});
-
 app.get('/talker', (_request, response) => {
   const talkerPersons = JSON.parse(fs.readFileSync(data));
   if (!talkerPersons) return response.status(200).json([]);
@@ -66,6 +61,37 @@ rateValidate, async (request, response) => {
   parsed.push(newPerson);
   fs.writeFileSync(data, JSON.stringify(parsed));
   return response.status(201).json(newPerson);
+});
+
+app.put('/talker/:id', tokenValidation,
+nameValidation,
+ageValidation,
+talkValidation,
+watchValidate,
+rateValidate, (req, res) => {
+  const dataPath = fs.readFileSync(data, 'utf8');
+  const parsed = JSON.parse(dataPath);
+  const { name, age, talk } = req.body;
+  const { id } = req.params;
+  const findId = parsed.findIndex((e) => e.id === Number(id));
+  if (findId === -1) return res.status(404).json({ message: 'Talker not found' });
+  parsed[findId] = { ...parsed[findId], name, age, talk };
+  fs.writeFileSync(data, JSON.stringify(parsed), 'utf-8');
+  res.status(200).json({ id: Number(id), name, age, talk });
+});
+
+app.delete('/talker/:id', tokenValidation, (req, res) => {
+  const dataPath = fs.readFileSync(data, 'utf8');
+  const parsed = JSON.parse(dataPath);
+  const { id } = req.params;
+  const findNewId = parsed.findIndex((e) => e.id !== Number(id));
+  fs.writeFileSync(data, JSON.stringify(findNewId), 'utf-8');
+  res.status(204).end();
+});
+
+// não remova esse endpoint, e para o avaliador funcionar
+app.get('/', (_request, response) => {
+  response.status(HTTP_OK_STATUS).send();
 });
 
 app.listen(PORT, () => {
