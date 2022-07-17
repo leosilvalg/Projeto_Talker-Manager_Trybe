@@ -24,6 +24,16 @@ app.get('/talker', (_request, response) => {
   response.status(HTTP_OK_STATUS).send(talkerPersons);
 });
 
+app.get('/talker/search', tokenValidation, (req, res) => {
+  const { q } = req.query;
+  const dataPath = fs.readFileSync(data, 'utf8');
+  const parsed = JSON.parse(dataPath);
+  const parsedFilter = parsed.filter((talker) => talker.name.includes(q));
+  if (!q) return res.status(HTTP_OK_STATUS).json(parsed);
+  if (!parsedFilter) return res.status(HTTP_OK_STATUS).send([]);
+  return res.status(HTTP_OK_STATUS).json(parsedFilter);
+});
+
 app.get('/talker/:id', async (request, response) => {
   const talkerPersons = await JSON.parse(fs.readFileSync(data));
   const { id } = request.params;
